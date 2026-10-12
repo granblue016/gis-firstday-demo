@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Leaflet WFS & Popup từ GeoServer</title>
+    
+    <!-- Nhúng CSS của Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h2 {
+            color: #333;
+        }
+        #map {
+            width: 100%;
+            height: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Bản đồ Web GIS: WFS & Popup tương tác từ GeoServer</h2>
+    <p>Dữ liệu được tải về dạng Vector (GeoJSON) qua chuẩn WFS, cho phép click trực tiếp vào từng bang để xem thông tin thuộc tính.</p>
+    
+    <!-- Khung chứa bản đồ -->
+    <div id="map"></div>
+
+    <!-- Nhúng JavaScript của Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // 1. Khởi tạo bản đồ tại tâm nước Mỹ
+        var map = L.map('map').setView([37.8, -96], 4);
+
+        // 2. Thêm bản đồ nền Esri
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, and the GIS Community'
+        }).addTo(map);
+
+        // 3. Định nghĩa đường dẫn WFS Endpoint của GeoServer (Yêu cầu trả về định dạng GeoJSON)
+        var wfsUrl = 'http://localhost:8080/geoserver/topp/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=topp%3Astates&outputFormat=application%2Fjson&maxFeatures=50';
+
+        // 4. Sử dụng Fetch API để kéo cục dữ liệu vector thô về trình duyệt
+        fetch(wfsUrl)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                // 5. Đưa dữ liệu GeoJSON vào Leaflet thông qua L.geoJson
+                L.geoJson(data, {
+                    // Tùy chỉnh phong cách hiển thị cho các đa giác (polygon)
+                    style: function(feature) {
+                        return {
+                            fillColor: '#3388ff',
+                            weight: 2,
+                            opacity: 1,
+                            color: 'white',      // Màu viền ranh giới
+                            fillOpacity: 0.5     // Độ trong suốt của màu nền
+                        };
+                    },
+                    // Gắn sự kiện tương tác cho từng đối tượng (feature)
+                    onEachFeature: function(feature, layer) {
+                        if (feature.properties && feature.properties.STATE_NAME) {
+                            // Lấy thông tin thuộc tính từ GeoServer trả về và tạo nội dung Popup
+                            var popupContent = "<b>Tên Bang: </b>" + feature.properties.STATE_NAME + "<br>" +
+                                               "<b>Dân số: </b>" + (feature.properties.PERSONS || 'Không rõ');
+                            
+                            // Gắn popup vào lớp đối tượng
+                            layer.bindPopup(popupContent);
+                        }
+                    }
+                }).addTo(map);
+            })
+            .catch(function(error) {
+                console.error('Lỗi khi tải dữ liệu WFS:', error);
+            });
+    </script>
+
+</body>
+</html>
