@@ -38,8 +38,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // 1. Khởi tạo bản đồ tại tâm nước Mỹ
-        var map = L.map('map').setView([37.8, -96], 4);
+        // 1. Khởi tạo bản đồ tại tâm nước Mỹ/Việt Nam
+        var map = L.map('map').setView([13.7563, 100.5018], 4);
 
         // 2. Thêm bản đồ nền Esri
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
@@ -48,8 +48,8 @@
         }).addTo(map);
 
         // 3. Định nghĩa đường dẫn WFS Endpoint của GeoServer (Yêu cầu trả về định dạng GeoJSON)
-        var wfsUrl = 'http://localhost:8080/geoserver/topp/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=topp%3Astates&outputFormat=application%2Fjson&maxFeatures=50';
-
+        // var wfsUrl = 'http://localhost:8080/geoserver/topp/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=topp%3Astates&outputFormat=application%2Fjson&maxFeatures=50';
+        var wfsUrl = 'http://localhost:8080/geoserver/my_workspace/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=my_workspace:diem_yeu_thich&outputFormat=application/json&maxFeatures=50';
         // 4. Sử dụng Fetch API để kéo cục dữ liệu vector thô về trình duyệt
         fetch(wfsUrl)
             .then(function(response) {
@@ -77,6 +77,9 @@
                             
                             // Gắn popup vào lớp đối tượng
                             layer.bindPopup(popupContent);
+
+                            // In toàn bộ danh sách thuộc tính ra cửa sổ Console của trình duyệt
+                            console.log('Thuộc tính của đối tượng:', feature.properties);
                         }
                     }
                 }).addTo(map);
